@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>AWS Polly demo</title>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+	<!--[if lt IE 9]>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
+		<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+</head>
+<body>
+  <script>
+  API_URL = "https://tint07qsyk.execute-api.eu-central-1.amazonaws.com/dev";
+  window.AudioContext = window.AudioContext || window.webkitAudioContext;
+  const context = new AudioContext();
+
+  // function code from: https://stackoverflow.com/questions/21797299/convert-base64-string-to-arraybuffer
+  function _base64ToArrayBuffer(base64) {
+    var binary_string =  window.atob(base64);
+    var len = binary_string.length;
+    var bytes = new Uint8Array( len );
+    for (var i = 0; i < len; i++)        {
+        bytes[i] = binary_string.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+
+  // function code from: https://medium.com/@smcelhinney/building-a-greeting-app-using-amazon-polly-and-nodejs-a605f29c20f5
+  function process(Data) {
+    const source = context.createBufferSource();
+    context.decodeAudioData(Data, (buffer) => {
+      source.buffer = buffer;
+      source.connect(context.destination);
+      source.start(context.currentTime);
+    });
+  }
+
+  function sayIt() {
+    data = {
+      voice: $("#voice").val(),
+      text: $("#text").val()
+    }
+    $.post(
+      API_URL + "/sayit",
+      JSON.stringify(data),
+      function(response) {
+        array = _base64ToArrayBuffer(response['voice']);
+        process(array);
+      },
+      'json'
+    );
+  }
+  </script>
+  <div class="container">
+  	<h1>AWS Polly demo</h1>
+    <div class="row">
+    <textarea class="form-control" id="text" placeholder="Wpisz tekst"></textarea>
+    <select id="voice" class="form-control">
+      <option value="Jacek">Jacek</option>
+      <option value="Jan">Jan</option>
+      <option value="Ewa">Ewa</option>
+      <option value="Maja">Maja</option>
+    </select>
+    <button onclick="sayIt()">Say it!</button>
+  </div>
+  </div>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
+</body>
+</html>
